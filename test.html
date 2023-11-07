@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <button onclick="myDebounce()">防抖弹窗</button>
+    <button onclick="myThrottle()">节流弹窗</button>
+    <button onclick="mySendRequest()">发送请求</button>
+    <div style="width: 50px;text-overflow: ellipsis;white-space: nowrap;overflow: hidden;" title="1231231111111111112323">1231231111111111112323</div>
+    <button onclick="download('hello world', 'hello.txt')">下载文件</button>
+    <input type="file" accept="image/*,.pdf" />
+    <div id="drag" style="height: 100px;border:1px solid red;width: 100px;user-select: none" draggable="true">可拖拽元素</div>
+    <div class="drop-zone" style="height: 300px;width: 300px;border: 1px solid blue;margin-top: 100px;" > 可以放置的区域</div>
+  <script>
+
+function download(content, filename) {
+    // 字符内容转变成blob地址
+    var blob = new Blob([content]);
+    if('msSaveOrOpenBlob' in navigator){
+        window.navigator.msSaveOrOpenBlob(blob, filename);
+        return;
+    }
+    var eleLink = document.createElement('a');
+    eleLink.download = filename;
+    eleLink.style.display = 'none';
+    eleLink.href = URL.createObjectURL(blob);
+    document.body.appendChild(eleLink);
+    eleLink.click();
+    document.body.removeChild(eleLink);
+};
+const myDrag = document.getElementById('drag');
+//开始拖拽
+myDrag.addEventListener('dragstart', (e) => {
+    myDrag.style.position = 'relative';
+    e.dataTransfer.setData('text/plain', 'hello world');
+    //  console.log("鼠标的位置","x",e.clientX,"y",e.clientY)
+})
+//拖拽过程
+myDrag.addEventListener('drag', (e) => {
+    // console.log("鼠标的位置","x",e.clientX,"y",e.clientY)
+})
+//拖拽进入目标区域
+myDrag.addEventListener('dragenter', (e) => {
+    e.preventDefault();
+})
+//拖拽结束
+const dragEndHandler = (event) => {
+  event.preventDefault();
+  // 异步操作
+};
+myDrag.addEventListener('dragend', (e) => {
+    myDrag.style.left = e.clientX - (myDrag.clientWidth/2) + "px";
+    myDrag.style.top = e.clientY - (myDrag.clientHeight/2) + "px";
+    dragEndHandler(e);
+})
+myDrag.addEventListener('dragover', (e) => {
+    myThrottle();
+});
+const dropZone = document.querySelector('.drop-zone');
+
+dropZone.addEventListener('dragover', (event) => {
+  // 阻止默认的拖拽行为
+  myThrottle(event)
+  event.preventDefault();
+});
+
+dropZone.addEventListener('drop', (event) => {
+  // 拖拽元素放置到目标区域时触发的事件
+  event.preventDefault();
+//   console.log(event.dataTransfer.dropEffect)
+  const data = event.dataTransfer.getData('text/plain');
+//   console.log(data)
+});
+
+//TODO 防抖和节流
+//防抖
+
+const alert1 = (e) => {
+    console.log(123)
+}
+//防抖
+const debounce = (fn, delay) => {
+  //设定一个定时器
+  let timer;
+  return (...arguments) => {
+    //根据防抖的定义，当事件重复触发，则执行后触发的事件
+    //所以定时器存在时，清除之前的定时器
+    if (!!timer) clearTimeout(timer);
+    //重新设定定时器
+    timer = setTimeout(() => {
+      fn(...arguments);
+    }, delay);
+  };
+};
+
+const myDebounce = debounce(alert1, 1000);
+//节流
+const Throttle = (fn, delay) => {
+  //设定一个定时器
+  let timer;
+  return (...arguments) => {
+    //根据节流的定义，当事件重复触发，不执行后触发的事件，等待上一个事件执行完毕再执行
+    //所以只有不存在定时器时才开始设定定时器
+    if (!timer) {
+        timer = setTimeout(() => {
+            fn(...arguments);
+            timer = null;
+        }, delay);
+    }
+  }
+}
+const myThrottle = Throttle(alert1, 1000);
+//深拷贝
+const deepClone =(object,map = new WeakMap()) =>{
+  //判断传入的object是否为对象
+    const isObject = typeof object === 'object';
+    //如果不为对象，直接返回
+    if(!isObject){
+        return object;
+    }
+    //判断map中是否已经存在该对象，如果存在，直接返回该对象
+    if(map.get(object)){
+      return map.get(object);
+    }
+    // 兼容数组
+    const newObject = Array.isArray(object) ? [] : {};
+    //向map中加入键为object，值为newObject的键值对
+    map.set(object,newObject);
+    //此时map中的键值对为{object:newObject}
+    //再对象中的每个属性进行深拷贝
+    for(const key in object){
+      //判断对象上的键是否继承而来
+        if(object.hasOwnProperty(key)){
+          //向map中赋值，递归深拷贝
+            map.set(object,key);
+            newObject[key] = deepClone(object[key],map);
+        }else{
+            newObject[key] = object[key];
+        }
+    }
+    console.log(map)
+   return newObject
+}
+
+const obj = deepClone({name:'lihua',age:18,child:{name:'lihua',age:18}});
+console.log(obj)
+//使用ajax发送请求
+const mySendRequest=()=>{
+const xhp = new XMLHttpRequest();
+xhp.onreadystatechange = event => {
+        console.log(event);
+    }
+// xhp.setRequestHeader('Content-Type', 'application/json');
+
+const formatKey = (object) =>{
+    const keys = Object.keys(object)
+    
+}
+
+xhp.open('post','qwewe ');// 请求方式，请求地址
+    xhp.send(JSON.stringify({"name":"lihua"}));
+}
+   </script>
+</body>
+</html>
