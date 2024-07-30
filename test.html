@@ -14,6 +14,15 @@
     <input type="file" accept="image/*,.pdf" />
     <div id="drag" style="height: 100px;border:1px solid red;width: 100px;user-select: none" draggable="true">可拖拽元素</div>
     <div class="drop-zone" style="height: 300px;width: 300px;border: 1px solid blue;margin-top: 100px;" > 可以放置的区域</div>
+    <div id="text">
+      <input type="text" id="inputText" />
+      <span id="viewText"></span>
+      <input type="range" id="inputRange" />
+    </div>
+    <button onclick="result()">模拟请求暂停(开始</button>
+    <button onclick="result().pause()">模拟请求暂停(暂停</button>
+    <button onclick="result().resume()">模拟请求暂停(继续</button>
+  <!-- js -->
   <script>
 
 function download(content, filename) {
@@ -141,7 +150,6 @@ const deepClone =(object,map = new WeakMap()) =>{
             newObject[key] = object[key];
         }
     }
-    console.log(map)
    return newObject
 }
 
@@ -164,5 +172,121 @@ xhp.open('post','qwewe ');// 请求方式，请求地址
     xhp.send(JSON.stringify({"name":"lihua"}));
 }
    </script>
+   <script>
+
+function _request () {
+  return new Promise((res) => setTimeout(() => {
+    res(123)
+  }, 3000))
+}
+
+// 原本想使用 class extends Promise 来实现
+// 结果一直出现这个问题 https://github.com/nodejs/node/issues/13678
+function createPauseControllerPromise () {
+  const result = {
+    isPause: false,
+    resolveWhenResume: false,
+    resolve (value) {},
+    pause () {
+      this.isPause = true
+    },
+    resume () {
+      if (!this.isPause) return
+      this.isPause = false
+      if (this.resolveWhenResume) {
+          this.resolve()
+      }
+    },
+    promise: Promise.resolve()
+  }
+  
+  const promise = new Promise((res) => {
+    result.resolve = res
+  })
+  
+  result.promise = promise
+
+  return result
+}
+
+function requestWithPauseControl (request) {
+  const controller = createPauseControllerPromise()
+  
+  const controlRequest = request().then((data) => {
+      if (!controller.isPause) controller.resolve()
+      controller.resolveWhenResume = controller.isPause
+      return data
+  })
+  
+  const result = Promise.all([controlRequest, controller.promise])
+      .then(data => data[0])
+      
+  result.finally(() => controller.resolve())
+  
+  result.pause = controller.pause.bind(controller);
+  result.resume = controller.resume.bind(controller);
+  
+  return result 
+}
+
+
+const result = ()=>{ 
+  console.log("result")
+  const res = requestWithPauseControl(_request)
+  res.then((data)=>{
+    console.log(data)
+  })
+  res.pause()
+  setTimeout(()=>{
+    res.resume()
+  },10000)
+  // res.resume()
+}
+// 
+
+//
+
+
+   </script>
+   <!-- css -->
+   <script>
+      const inputText = document.querySelector('#inputText')
+      const viewText = document.querySelector('#viewText')
+      const text = document.querySelector('#text')
+
+      const createHoverText = (value, x, y) => {
+        const hoverText = document.createElement('span')
+        hoverText.id = 'hoverText'
+        hoverText.textContent = value
+        hoverText.style.position = 'absolute'
+        hoverText.style.left = x + 50 + 'px'
+        hoverText.style.top = y + 'px'
+        return hoverText
+      }
+
+      inputText.addEventListener('input', (e) => {
+        viewText.textContent = e.target.value
+      })
+
+      viewText.addEventListener('mouseenter', (e) => {
+        const viewTextX = viewText.offsetLeft
+        const viewTextY = viewText.offsetTop
+        const hoverText = createHoverText(e.target.textContent, viewTextX, viewTextY)
+        text.appendChild(hoverText)
+      })
+
+      viewText.addEventListener('mouseleave', (e) => {
+        const hoverText = document.querySelector('#hoverText')
+        text.removeChild(hoverText)
+      })
+   </script>
 </body>
+<style>
+  #viewText {
+    max-width: 50px;
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+</style>
 </html>
