@@ -6,7 +6,7 @@ export default function ComponentA({ state }: any) {
     <div>
       <button
         onClick={() => {
-          Store.setStore({ a: Store.getStore().a + 1 });
+          
         }}
       >
         click me
