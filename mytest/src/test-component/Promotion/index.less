@@ -1,0 +1,42 @@
+.promotion-layout {
+  :global {
+    .ant-layout-header {
+      background: transparent;
+
+      .ant-tabs-nav {
+        height: 60px;
+      }
+    }
+  }
+}
+
+.data-preview-table {
+  :global {
+    tr.ant-table-row-level-0:first-child {
+      .ant-table-cell.ant-table-selection-column {
+        display: none;
+      }
+    }
+  }
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  .data-preview-table-filter {
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+    height: 40px;
+  }
+
+  .data-preview-table-action {
+    display: flex;
+    padding: 5px 20px 5px 5px;
+    height: 40px;
+    background: #f8f5f5;
+    gap: 10px;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
